@@ -1,0 +1,15 @@
+Items: {
+	SummoningItem: {
+		DisplayName: Heart Locket
+		Tooltip: Summons the demon that comes when people call its name
+	}
+}
+
+Buffs: {
+	FallenHumanBuff: {
+		DisplayName: Curse of the Demon
+		Description: The first fallen human will assist you in battle
+	}
+}
+
+Projectiles.FallenHumanProjectile.DisplayName: Fallen Human Projectile
