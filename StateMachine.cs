@@ -39,12 +39,11 @@ public class StateMachine<T> where T : class, IStateMachineTarget
         if(target.LastStateId != target.CurrentStateId) ChangeState(target.CurrentStateId, target);
         target.LastStateId = target.CurrentStateId;
         
-        if(target.CurrentStateId < 0) return;
-        
         IState<T> currentState = idToStateMap[target.CurrentStateId];
         currentState.Update(new StateUpdateContext<T>(this, target));
 
-        target.StateTimer += 1f;
+        target.LifeTime += 1f;
+        target.StateTime += 1f;
     }
 
     private void ChangeState(int newStateId, T target)
@@ -52,12 +51,9 @@ public class StateMachine<T> where T : class, IStateMachineTarget
         IState<T> nextState = idToStateMap[newStateId];
         IState<T> previousState = idToStateMap[target.CurrentStateId];
 
-        if (target.CurrentStateId >= 0)
-        {
-            previousState.Exit(new StateExitContext<T>(this, target, nextState));
-        }
+        previousState.Exit(new StateExitContext<T>(this, target, nextState));
         
-        target.StateTimer = 0;
+        target.StateTime = 0;
         target.LastStateId = target.CurrentStateId;
         target.CurrentStateId = newStateId;
         
@@ -67,9 +63,10 @@ public class StateMachine<T> where T : class, IStateMachineTarget
 
 public interface IStateMachineTarget
 {
+    float LifeTime { get; set; }
+    float StateTime { get; set; }
     int CurrentStateId { get; set; }
     int LastStateId { get; set; }
-    float StateTimer { get; set; }
 }
 
 public interface IState<T> where T : class, IStateMachineTarget

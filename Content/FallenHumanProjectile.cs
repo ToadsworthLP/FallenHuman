@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using FallenHuman.Content.States;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -27,25 +28,43 @@ public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 	//public ref float AIDashCharge => ref Projectile.ai[1];
 
 	public static StateMachine<FallenHumanProjectile> StateMachine;
-	public static TestState TestState1;
-	public static TestState TestState2;
+	public static IdleState IdleState;
+	public static FollowPlayerState FollowPlayerState;
 
-	public float StateTimer 
-	{ 
+	public float LifeTime
+	{
 		get => Projectile.ai[0];
 		set => Projectile.ai[0] = value;
 	}
 	
+	public float StateTime 
+	{ 
+		get => Projectile.ai[1];
+		set => Projectile.ai[1] = value;
+	}
+	
 	public int CurrentStateId 
 	{ 
-		get => (int)Projectile.ai[1];
-		set => Projectile.ai[1] = value;
+		get => new PackedState(Projectile.ai[2]).CurrentStateId;
+		set {
+			var packed = new PackedState(Projectile.ai[2])
+			{
+				CurrentStateId = (ushort)value
+			};
+			Projectile.ai[2] = packed.EncodedValue;
+		}
 	}
 	
 	public int LastStateId 
 	{ 
-		get => (int)Projectile.ai[2];
-		set => Projectile.ai[2] = value;
+		get => new PackedState(Projectile.ai[2]).LastStateId;
+		set {
+			var packed = new PackedState(Projectile.ai[2])
+			{
+				LastStateId = (ushort)value
+			};
+			Projectile.ai[2] = packed.EncodedValue;
+		}
 	}
 
 	public override void SetStaticDefaults() {
@@ -59,15 +78,11 @@ public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 			.WithCode(PreviewAnimation);
 		
 		// State machine setup
-		
-		TestState1 = new TestState();
-		TestState2 = new TestState();
-
-		TestState1.NextState = TestState2;
-		TestState2.NextState = TestState1;
+		IdleState = new IdleState(0.05f, 0.5f, 100f, 0.95f);
+		FollowPlayerState = new FollowPlayerState(0.05f, 0.5f, 70f, 1000f, 3f, 30f, 500f);
 		
 		StateMachine = new StateMachine<FallenHumanProjectile>();
-		StateMachine.RegisterStates(TestState1, TestState2);
+		StateMachine.RegisterStates(IdleState, FollowPlayerState);
 	}
 	
 	public static void PreviewAnimation(Projectile proj, bool walking)
@@ -113,10 +128,34 @@ public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 		//UpdateExtraMovement();
 		
 		StateMachine.Update(this);
+
+		if (MathF.Abs(Projectile.velocity.X) > 0.1f)
+		{
+			Projectile.direction = Projectile.spriteDirection = Projectile.velocity.X > 0 ? 1 : -1;
+		}
 		
 		// Lights up area around it.
 		if (!Main.dedServ) {
 			Lighting.AddLight(Projectile.Center, Projectile.Opacity * 0.9f, Projectile.Opacity * 0.1f, Projectile.Opacity * 0.3f);
+		}
+	}
+
+	[StructLayout(LayoutKind.Explicit)]
+	private struct PackedState
+	{
+		[FieldOffset(0)] public float EncodedValue;
+		[FieldOffset(sizeof(ushort) * 0)] public ushort CurrentStateId;
+		[FieldOffset(sizeof(ushort) * 1)] public ushort LastStateId;
+
+		public PackedState(float encodedValue)
+		{
+			EncodedValue = encodedValue;
+		}
+
+		public PackedState(ushort currentStateId, ushort lastStateId)
+		{
+			CurrentStateId = currentStateId;
+			LastStateId = lastStateId;
 		}
 	}
 

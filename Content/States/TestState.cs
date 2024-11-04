@@ -13,7 +13,7 @@ public class TestState : IState<FallenHumanProjectile>
 
     public void Update(StateUpdateContext<FallenHumanProjectile> context)
     {
-        if(context.Target.StateTimer > 60) context.StateMachine.ChangeState(NextState, context.Target);
+        if(context.Target.StateTime > 60) context.StateMachine.ChangeState(NextState, context.Target);
     }
 
     public void Exit(StateExitContext<FallenHumanProjectile> context)
