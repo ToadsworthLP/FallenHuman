@@ -2,7 +2,6 @@
 using System.Runtime.InteropServices;
 using FallenHuman.Assets.Sounds;
 using FallenHuman.Content.States;
-using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -12,6 +11,9 @@ namespace FallenHuman.Content;
 
 public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 {
+	public const int Damage = 15;
+	public const float Knockback = 5.0f;
+	
 	public static StateMachine<FallenHumanProjectile> StateMachine;
 	public static IdleState IdleState;
 	public static FollowPlayerState FollowPlayerState;
@@ -61,7 +63,7 @@ public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 	public override void SetStaticDefaults() {
 		Main.projFrames[Projectile.type] = 1;
 		Main.projPet[Projectile.type] = true;
-		ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
+		ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
 		
 		ProjectileID.Sets.CharacterPreviewAnimations[Projectile.type] = ProjectileID.Sets.SimpleLoop(0, Main.projFrames[Projectile.type], 6)
 			.WithOffset(-10, 0f)
@@ -73,15 +75,13 @@ public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 		SlashSoundStyle = new SoundStyle(SoundAssetPath.Slash);
 		
 		// State machine setup
-		IdleState = new IdleState(0.05f, 0.5f, 100f, 0.95f);
-		FollowPlayerState = new FollowPlayerState(0.05f, 0.5f, 70f, 1000f, 3f, 30f, 500f);
-		AttackState = new AttackState(0.25f, 100f, 10);
+		IdleState = new IdleState(0.05f, 0.5f, 120f, 0.95f);
+		FollowPlayerState = new FollowPlayerState(0.05f, 0.5f, 100f, 1000f, 3f, 30f, 500f);
+		AttackState = new AttackState(0.25f, 70f, 10);
 		CooldownState = new CooldownState(0.05f, 0.5f, 60f, 0.8f);
 		
 		StateMachine = new StateMachine<FallenHumanProjectile>();
 		StateMachine.RegisterStates(IdleState, FollowPlayerState, AttackState, CooldownState);
-		
-		// TODO take a closer look at ExampleSimpleMinion.cs from ExampleMod
 	}
 	
 	public static void PreviewAnimation(Projectile proj, bool walking)
@@ -102,10 +102,21 @@ public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 		Projectile.penetrate = -1;
 		Projectile.netImportant = true;
 		Projectile.timeLeft *= 5;
-		Projectile.friendly = true;
+		Projectile.friendly = false;
+		Projectile.minion = true;
 		Projectile.ignoreWater = true;
 		Projectile.scale = 1f;
 		Projectile.tileCollide = false;
+		Projectile.DamageType = DamageClass.Summon;
+		Projectile.penetrate = -1;
+	}
+	
+	public override bool? CanCutTiles() {
+		return false;
+	}
+
+	public override bool MinionContactDamage() {
+		return true;
 	}
 
 	public override void AI() {
@@ -121,10 +132,6 @@ public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 		if (!player.dead && player.HasBuff(ModContent.BuffType<FallenHumanBuff>())) {
 			Projectile.timeLeft = 2;
 		}
-
-		//UpdateDash(player);
-		//UpdateFading(player);
-		//UpdateExtraMovement();
 		
 		StateMachine.Update(this);
 

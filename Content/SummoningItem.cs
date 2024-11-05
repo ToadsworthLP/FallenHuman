@@ -12,7 +12,6 @@ public class SummoningItem : ModItem
     {
         Item.width = 30;
         Item.height = 30;
-        Item.damage = 0;
         Item.useStyle = ItemUseStyleID.None;
         Item.UseSound = new SoundStyle(SoundAssetPath.Equip);
         Item.useAnimation = 0;
@@ -22,6 +21,7 @@ public class SummoningItem : ModItem
         Item.value = Item.sellPrice(0, 2);
         Item.buffType = ModContent.BuffType<FallenHumanBuff>();
         Item.shoot = ModContent.ProjectileType<FallenHumanProjectile>();
+        Item.DamageType = DamageClass.Summon;
     }
     
     public override bool? UseItem(Player player)

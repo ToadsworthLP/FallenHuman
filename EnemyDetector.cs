@@ -15,7 +15,7 @@ public class EnemyDetector
     public NPC GetEnemyInRange(Vector2 position)
     {
         foreach (NPC npc in Main.ActiveNPCs) {
-            if (npc.friendly) {
+            if (!npc.CanBeChasedBy()) {
             	continue;
             }
 

@@ -44,7 +44,29 @@ public class AttackState : IState<FallenHumanProjectile>
         	SoundEngine.PlaySound(FallenHumanProjectile.SlashSoundStyle, context.Target.Projectile.Center);
         }
         
-        target.life -= attackDamage;
+        //target.life -= attackDamage;
+
+        context.Target.Projectile.friendly = true;
+        
+        // Spawn dust
+        if (context.Target.Projectile.velocity.LengthSquared() > 0.01f)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                var dust = Dust.NewDustDirect(
+                    context.Target.Projectile.position, 
+                    context.Target.Projectile.width, 
+                    context.Target.Projectile.height, 
+                    DustID.PinkFairy, 
+                    0f, 0f,
+                    200,
+                    default,
+                    0.8f
+                );
+
+                dust.velocity *= 0.5f;
+            }
+        }
         
         context.StateMachine.ChangeState(FallenHumanProjectile.CooldownState, context.Target);
     }

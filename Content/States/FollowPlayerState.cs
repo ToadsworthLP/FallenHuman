@@ -28,7 +28,7 @@ public class FollowPlayerState : IState<FallenHumanProjectile>
 
     public void Enter(StateEnterContext<FallenHumanProjectile> context)
     {
-        
+        context.Target.Projectile.friendly = false;
     }
 
     public void Update(StateUpdateContext<FallenHumanProjectile> context)

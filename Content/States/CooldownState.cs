@@ -32,23 +32,29 @@ public class CooldownState : IState<FallenHumanProjectile>
             return;
         }
         
+        // Enable contact damage while moving
+        context.Target.Projectile.friendly = context.Target.Projectile.velocity.LengthSquared() > 0.01f;
+        
         // Floating animation
         context.Target.Projectile.position.Y += MathF.Cos(context.Target.LifeTime * idleAnimationFrequency) * idleAnimationAmplitude;
         
-        // Spawn dust
-        if (Main.rand.NextBool(6)) {
-            var dust = Dust.NewDustDirect(
-                context.Target.Projectile.position, 
-                context.Target.Projectile.width, 
-                context.Target.Projectile.height, 
-                DustID.PinkFairy, 
-                0f, 0f,
-                200,
-                default,
-                0.8f
-            );
+        // Spawn dust while moving
+        if (context.Target.Projectile.velocity.LengthSquared() > 0.01f)
+        {
+            if (Main.rand.NextBool(3)) {
+                var dust = Dust.NewDustDirect(
+                    context.Target.Projectile.position, 
+                    context.Target.Projectile.width, 
+                    context.Target.Projectile.height, 
+                    DustID.PinkFairy, 
+                    0f, 0f,
+                    200,
+                    default,
+                    0.8f
+                );
 
-            dust.velocity *= 0.3f;
+                dust.velocity *= 0.5f;
+            }
         }
 
         context.Target.Projectile.velocity *= inertia;
@@ -56,6 +62,6 @@ public class CooldownState : IState<FallenHumanProjectile>
 
     public void Exit(StateExitContext<FallenHumanProjectile> context)
     {
-        
+        context.Target.Projectile.friendly = false;
     }
 }
