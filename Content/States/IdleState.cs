@@ -8,14 +8,14 @@ public class IdleState : IState<FallenHumanProjectile>
 {
     private readonly float idleAnimationFrequency;
     private readonly float idleAnimationAmplitude;
-    private readonly float drag;
+    private readonly float inertia;
     private readonly float followPlayerTransitionDistanceSquared;
     
-    public IdleState(float idleAnimationFrequency, float idleAnimationAmplitude, float followPlayerTransitionDistance, float drag)
+    public IdleState(float idleAnimationFrequency, float idleAnimationAmplitude, float followPlayerTransitionDistance, float inertia)
     {
         this.idleAnimationFrequency = idleAnimationFrequency;
         this.idleAnimationAmplitude = idleAnimationAmplitude;
-        this.drag = drag;
+        this.inertia = inertia;
         this.followPlayerTransitionDistanceSquared = followPlayerTransitionDistance * followPlayerTransitionDistance;
     }
 
@@ -28,6 +28,13 @@ public class IdleState : IState<FallenHumanProjectile>
     {
         Player player = Main.player[context.Target.Projectile.owner];
         
+        // If there's an enemy in range, attack
+        if (FallenHumanProjectile.EnemyDetector.GetEnemyInRange(player.Center) != null)
+        {
+            context.StateMachine.ChangeState(FallenHumanProjectile.AttackState, context.Target);
+            return;
+        }
+        
         // If the player is far enough away, transition to the follow state
         if (player.Center.DistanceSQ(context.Target.Projectile.Center) > followPlayerTransitionDistanceSquared)
         {
@@ -39,7 +46,7 @@ public class IdleState : IState<FallenHumanProjectile>
         
         // Add some drag
         if (context.Target.Projectile.velocity.Length() > 0.01f) {
-            context.Target.Projectile.velocity *= drag;
+            context.Target.Projectile.velocity *= inertia;
         }
         else
         {

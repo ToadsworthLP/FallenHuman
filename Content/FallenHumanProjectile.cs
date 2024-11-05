@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using FallenHuman.Assets.Sounds;
 using FallenHuman.Content.States;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -11,25 +12,15 @@ namespace FallenHuman.Content;
 
 public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 {
-	private const int DashCooldown = 1000; // How frequently this pet will dash at enemies.
-	private const float DashSpeed = 20f; // The speed with which this pet will dash at enemies.
-	private const int FadeInTicks = 30;
-	private const int FullBrightTicks = 200;
-	private const int FadeOutTicks = 30;
-	private const float Range = 500f;
-
-	private static readonly float RangeHypotenuse = (float)(Math.Sqrt(2.0) * Range); // This comes from the formula for calculating the diagonal of a square (a * √2)
-	private static readonly float RangeHypotenuseSquared = RangeHypotenuse * RangeHypotenuse;
-
-	// The following 2 lines of code are ref properties (learn about them in google) to the Projectile.ai array entries, which will help us make our code way more readable.
-	// We're using the ai array because it's automatically synchronized by the base game in multiplayer, which saves us from writing a lot of boilerplate code.
-	// Note that the Projectile.ai array is only 3 entries big. If you need more than 3 synchronized variables - you'll have to use fields and sync them manually.
-	//public ref float AIFadeProgress => ref Projectile.ai[0];
-	//public ref float AIDashCharge => ref Projectile.ai[1];
-
 	public static StateMachine<FallenHumanProjectile> StateMachine;
 	public static IdleState IdleState;
 	public static FollowPlayerState FollowPlayerState;
+	public static AttackState AttackState;
+	public static CooldownState CooldownState;
+
+	public static EnemyDetector EnemyDetector;
+
+	public static SoundStyle SlashSoundStyle;
 
 	public float LifeTime
 	{
@@ -76,13 +67,21 @@ public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 			.WithOffset(-10, 0f)
 			.WithSpriteDirection(-1)
 			.WithCode(PreviewAnimation);
+
+		EnemyDetector = new EnemyDetector(500f);
+
+		SlashSoundStyle = new SoundStyle(SoundAssetPath.Slash);
 		
 		// State machine setup
 		IdleState = new IdleState(0.05f, 0.5f, 100f, 0.95f);
 		FollowPlayerState = new FollowPlayerState(0.05f, 0.5f, 70f, 1000f, 3f, 30f, 500f);
+		AttackState = new AttackState(0.25f, 100f, 10);
+		CooldownState = new CooldownState(0.05f, 0.5f, 60f, 0.8f);
 		
 		StateMachine = new StateMachine<FallenHumanProjectile>();
-		StateMachine.RegisterStates(IdleState, FollowPlayerState);
+		StateMachine.RegisterStates(IdleState, FollowPlayerState, AttackState, CooldownState);
+		
+		// TODO take a closer look at ExampleSimpleMinion.cs from ExampleMod
 	}
 	
 	public static void PreviewAnimation(Projectile proj, bool walking)

@@ -36,6 +36,13 @@ public class FollowPlayerState : IState<FallenHumanProjectile>
         Player player = Main.player[context.Target.Projectile.owner];
         float playerDistanceSquared = player.Center.DistanceSQ(context.Target.Projectile.Center);
         
+        // If there's an enemy in range, attack
+        if (FallenHumanProjectile.EnemyDetector.GetEnemyInRange(player.Center) != null)
+        {
+            context.StateMachine.ChangeState(FallenHumanProjectile.AttackState, context.Target);
+            return;
+        }
+        
         // If the player is close enough, transition to the idle state
         if (playerDistanceSquared < idleTransitionDistanceSquared)
         {
