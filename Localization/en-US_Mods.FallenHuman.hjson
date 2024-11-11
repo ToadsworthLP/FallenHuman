@@ -1,7 +1,11 @@
 Items: {
 	SummoningItem: {
 		DisplayName: Heart Locket
-		Tooltip: Summons the demon that comes when people call its name
+		Tooltip:
+			'''
+			Summons the demon that comes when people call its name
+			Each hit deals half as much damage as the currently held weapon
+			'''
 	}
 }
 
@@ -12,4 +16,4 @@ Buffs: {
 	}
 }
 
-Projectiles.FallenHumanProjectile.DisplayName: Fallen Human Projectile
+Projectiles.FallenHumanProjectile.DisplayName: Fallen Human

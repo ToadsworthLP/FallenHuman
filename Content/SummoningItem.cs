@@ -1,4 +1,4 @@
-﻿using FallenHuman.Assets.Sounds;
+using FallenHuman.Assets.Sounds;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -8,12 +8,18 @@ namespace FallenHuman.Content;
 
 public class SummoningItem : ModItem
 {
+    public static SoundStyle UseSoundStyle;
+
+    public override void SetStaticDefaults()
+    {
+        UseSoundStyle = new SoundStyle(SoundAssetPath.Equip);
+    }
+
     public override void SetDefaults()
     {
         Item.width = 30;
         Item.height = 30;
         Item.useStyle = ItemUseStyleID.None;
-        Item.UseSound = new SoundStyle(SoundAssetPath.Equip);
         Item.useAnimation = 0;
         Item.useTime = 0;
         Item.rare = ItemRarityID.Red;
@@ -29,6 +35,11 @@ public class SummoningItem : ModItem
         if (player.whoAmI == Main.myPlayer) {
             player.AddBuff(Item.buffType, 3600);
         }
+        
+        if (!Main.dedServ) {
+            SoundEngine.PlaySound(UseSoundStyle, player.Center); // TODO fix the equip sound - this entire function isn't being called for some reason?
+        }
+        
         return true;
     }
     

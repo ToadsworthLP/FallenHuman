@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using FallenHuman.Assets.Sounds;
 using FallenHuman.Content.States;
@@ -11,7 +11,7 @@ namespace FallenHuman.Content;
 
 public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 {
-	public const int Damage = 15;
+	public const int MinDamage = 1;
 	public const float Knockback = 5.0f;
 	
 	public static StateMachine<FallenHumanProjectile> StateMachine;
@@ -77,7 +77,7 @@ public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 		// State machine setup
 		IdleState = new IdleState(0.05f, 0.5f, 120f, 0.95f);
 		FollowPlayerState = new FollowPlayerState(0.05f, 0.5f, 100f, 1000f, 3f, 30f, 500f);
-		AttackState = new AttackState(0.25f, 70f, 10);
+		AttackState = new AttackState(0.25f, 70f);
 		CooldownState = new CooldownState(0.05f, 0.5f, 60f, 0.8f);
 		
 		StateMachine = new StateMachine<FallenHumanProjectile>();
@@ -108,7 +108,7 @@ public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 		Projectile.scale = 1f;
 		Projectile.tileCollide = false;
 		Projectile.DamageType = DamageClass.Summon;
-		Projectile.penetrate = -1;
+		Projectile.ContinuouslyUpdateDamageStats = true;
 	}
 	
 	public override bool? CanCutTiles() {
@@ -121,7 +121,7 @@ public class FallenHumanProjectile : ModProjectile, IStateMachineTarget
 
 	public override void AI() {
 		Player player = Main.player[Projectile.owner];
-
+		
 		// If the player is no longer active (online) - deactivate (remove) the projectile.
 		if (!player.active) {
 			Projectile.active = false;

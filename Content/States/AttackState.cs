@@ -11,12 +11,10 @@ public class AttackState : IState<FallenHumanProjectile>
 {
     private readonly float distanceDependentAttackVelocityMultiplier;
     private readonly float minAttackVelocity;
-    private readonly int attackDamage;
     
-    public AttackState(float distanceDependentAttackVelocityMultiplier, float minAttackVelocity, int attackDamage)
+    public AttackState(float distanceDependentAttackVelocityMultiplier, float minAttackVelocity)
     {
         this.distanceDependentAttackVelocityMultiplier = distanceDependentAttackVelocityMultiplier;
-        this.attackDamage = attackDamage;
         this.minAttackVelocity = minAttackVelocity;
     }
 
@@ -35,6 +33,8 @@ public class AttackState : IState<FallenHumanProjectile>
             context.StateMachine.ChangeState(FallenHumanProjectile.IdleState, context.Target);
             return;
         }
+        
+        UpdateStats(player, context.Target.Projectile);
 
         Vector2 toTarget = (target.Center - context.Target.Projectile.Center).SafeNormalize(Vector2.Zero);
         float distanceToTarget = (target.Center - context.Target.Projectile.Center).Length();
@@ -44,8 +44,6 @@ public class AttackState : IState<FallenHumanProjectile>
         	SoundEngine.PlaySound(FallenHumanProjectile.SlashSoundStyle, context.Target.Projectile.Center);
         }
         
-        //target.life -= attackDamage;
-
         context.Target.Projectile.friendly = true;
         
         // Spawn dust
@@ -74,5 +72,10 @@ public class AttackState : IState<FallenHumanProjectile>
     public void Exit(StateExitContext<FallenHumanProjectile> context)
     {
         
+    }
+
+    private void UpdateStats(Player player, Projectile projectile)
+    {
+        projectile.originalDamage = Math.Max(FallenHumanProjectile.MinDamage, (int)(player.GetWeaponDamage(player.HeldItem) * 0.5f));
     }
 }
