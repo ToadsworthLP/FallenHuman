@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
-using Terraria.ModLoader;
 
 namespace FallenHuman.Content.States;
 
@@ -33,8 +32,9 @@ public class AttackState : IState<FallenHumanProjectile>
             context.StateMachine.ChangeState(FallenHumanProjectile.IdleState, context.Target);
             return;
         }
-        
-        UpdateStats(player, context.Target.Projectile);
+
+        int attackDamage = GetAttackDamage(player);
+        context.Target.Projectile.originalDamage = attackDamage;
 
         Vector2 toTarget = (target.Center - context.Target.Projectile.Center).SafeNormalize(Vector2.Zero);
         float distanceToTarget = (target.Center - context.Target.Projectile.Center).Length();
@@ -42,29 +42,10 @@ public class AttackState : IState<FallenHumanProjectile>
 
         if (!Main.dedServ) {
         	SoundEngine.PlaySound(FallenHumanProjectile.SlashSoundStyle, context.Target.Projectile.Center);
+            Lighting.AddLight(context.Target.Projectile.Center, context.Target.Projectile.Opacity * 0.9f, context.Target.Projectile.Opacity * 0.1f, context.Target.Projectile.Opacity * 0.3f);
         }
         
         context.Target.Projectile.friendly = true;
-        
-        // Spawn dust
-        if (context.Target.Projectile.velocity.LengthSquared() > 0.01f)
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                var dust = Dust.NewDustDirect(
-                    context.Target.Projectile.position, 
-                    context.Target.Projectile.width, 
-                    context.Target.Projectile.height, 
-                    DustID.PinkFairy, 
-                    0f, 0f,
-                    200,
-                    default,
-                    0.8f
-                );
-
-                dust.velocity *= 0.5f;
-            }
-        }
         
         context.StateMachine.ChangeState(FallenHumanProjectile.CooldownState, context.Target);
     }
@@ -74,8 +55,8 @@ public class AttackState : IState<FallenHumanProjectile>
         
     }
 
-    private void UpdateStats(Player player, Projectile projectile)
+    private int GetAttackDamage(Player player)
     {
-        projectile.originalDamage = Math.Max(FallenHumanProjectile.MinDamage, (int)(player.GetWeaponDamage(player.HeldItem) * 0.5f));
+        return Math.Max(FallenHumanProjectile.MinDamage, (int)(player.GetWeaponDamage(player.HeldItem) * 0.5f));
     }
 }

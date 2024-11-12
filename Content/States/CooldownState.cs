@@ -32,29 +32,36 @@ public class CooldownState : IState<FallenHumanProjectile>
             return;
         }
         
-        // Enable contact damage while moving
-        context.Target.Projectile.friendly = context.Target.Projectile.velocity.LengthSquared() > 0.01f;
-        
+        float playerVelocitySquared = context.Target.Projectile.velocity.LengthSquared();
+
         // Floating animation
         context.Target.Projectile.position.Y += MathF.Cos(context.Target.LifeTime * idleAnimationFrequency) * idleAnimationAmplitude;
         
-        // Spawn dust while moving
-        if (context.Target.Projectile.velocity.LengthSquared() > 0.01f)
+        // Glow while moving
+        if (playerVelocitySquared > 0.1f)
         {
-            if (Main.rand.NextBool(3)) {
-                var dust = Dust.NewDustDirect(
-                    context.Target.Projectile.position, 
-                    context.Target.Projectile.width, 
-                    context.Target.Projectile.height, 
-                    DustID.PinkFairy, 
-                    0f, 0f,
-                    200,
-                    default,
-                    0.8f
-                );
-
-                dust.velocity *= 0.5f;
+            if (!Main.dedServ) {
+                Lighting.AddLight(context.Target.Projectile.Center, context.Target.Projectile.Opacity * 0.9f, context.Target.Projectile.Opacity * 0.1f, context.Target.Projectile.Opacity * 0.3f);
             }
+        }
+
+        // Deal damage while moving
+        context.Target.Projectile.friendly = playerVelocitySquared > 0.1f;
+        
+        // Spawn dust while moving quickly
+        if (playerVelocitySquared > 20.0f)
+        {
+            float speedMultiplier = Main.rand.NextFloat(0.05f, 0.1f);
+            var dust = Dust.NewDustDirect(
+                context.Target.Projectile.position, 
+                context.Target.Projectile.width, 
+                context.Target.Projectile.height, 
+                DustID.PinkFairy, 
+                context.Target.Projectile.velocity.X * speedMultiplier, context.Target.Projectile.velocity.Y * speedMultiplier,
+                0,
+                default,
+                0.8f
+            );
         }
 
         context.Target.Projectile.velocity *= inertia;
